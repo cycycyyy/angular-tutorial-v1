@@ -12,13 +12,24 @@ import { Router } from "@angular/router";
   template: `
     <section>
       <form>
-        <input type="text" placeholder="Filter by city" />
-        <button class="primary" type="button">Search</button>
+        <input
+          type="text"
+          placeholder="Filter by city"
+          #filter
+          (keydown)="filterResults(filter.value)"
+        />
+        <button
+          class="primary"
+          type="button"
+          (click)="filterResults(filter.value)"
+        >
+          Search
+        </button>
       </form>
     </section>
     <section>
       <app-housing-location
-        *ngFor="let housingLocation of housingLocationList"
+        *ngFor="let housingLocation of filteredLocationList"
         [housingLocation]="housingLocation"
         (click)="navigateToDetails(housingLocation.id)"
       ></app-housing-location>
@@ -28,6 +39,7 @@ import { Router } from "@angular/router";
 })
 export class HomeComponent {
   housingLocationList = [] as HousingLocation[];
+  filteredLocationList: HousingLocation[] = [];
 
   housingService: HousingService = inject(HousingService);
   router: Router = inject(Router);
@@ -36,7 +48,21 @@ export class HomeComponent {
     this.router.navigate(["details", id]);
   }
 
+  filterResults(text: string) {
+    if (!text) {
+      this.filteredLocationList = this.housingLocationList;
+      return;
+    }
+
+    this.filteredLocationList = this.housingLocationList.filter((location) =>
+      location?.city.toLowerCase().includes(text.toLowerCase())
+    );
+  }
+
   constructor() {
-    this.housingLocationList = this.housingService.getAllHousingLocations();
+    this.housingService.getAllHousingLocations().then((locations) => {
+      this.housingLocationList = locations;
+      this.filteredLocationList = locations;
+    });
   }
 }
